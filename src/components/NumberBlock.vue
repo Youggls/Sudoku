@@ -15,6 +15,8 @@
     {{ getNumber(line, col) }}
     </a-button>
   </div>
+  <div></div>
+  <a-button v-on:click="start"></a-button>
 </div>
 </template>
 <script>
@@ -27,12 +29,138 @@ export default {
       currentLine: -1,
       currentCol: -1,
       fresh: true,
-      numbers: [[]]
+      notSet: 0,
+      numbers: [[]],
+      errLine: 1,
+      errCol: 2,
+      errBlock: 3,
+      right: 0,
+      rows: [[]],
+      boxes: [[]],
+      columns: [[]],
+      isSloved: false
     }
   },
   methods: {
+    validate: function (line, col) {
+      let i = Math.floor(line / 3)
+      let j = Math.floor(col / 3)
+      let arr = Array(9).fill(1)
+      for (let r = 3 * i; r < 3 * (i + 1); r++) {
+        for (let c = 3 * j; c < 3 * (j + 1); c++) {
+          if (this.numbers[r][c] !== this.notSet) {
+            if (arr[this.numbers[r][c]] !== 0) {
+              arr[this.numbers[r][c]] = 0
+            } else {
+              return this.errBlock
+            }
+          }
+        }
+      }
+      arr.fill(1)
+      for (let r = 0; r < 9; r++) {
+        if (this.numbers[r][col] !== this.notSet) {
+          if (arr[this.numbers[r][col]] !== 0) {
+            arr[this.numbers[r][col]] = 0
+          } else {
+            return this.errLine
+          }
+        }
+      }
+      arr.fill(1)
+      for (let c = 0; c < 9; c++) {
+        if (this.numbers[line][c] !== this.notSet) {
+          if (arr[this.numbers[line][c]] !== 0) {
+            arr[this.numbers[line][c]] = 0
+          } else {
+            return this.errCol
+          }
+        }
+      }
+      return this.right
+    },
+    findAnswer: function () {
+      this.dfsFindAnswer(0, 0)
+      this.fresh = false
+      this.fresh = true
+    },
+    placeNumber: function (number, row, col) {
+      let boxIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3)
+      this.rows[row][number]++
+      this.columns[col][number]++
+      this.boxes[boxIndex][number]++
+      this.numbers[row][col] = number
+    },
+    placeNextNumber: function (row, col) {
+      if ((row === 8) && (col) === 8) {
+        this.isSloved = true
+      } else {
+        if (col === 8) this.dfsFindAnswer(row + 1, 0)
+        else this.dfsFindAnswer(row, col + 1)
+      }
+    },
+    removeNumber: function (number, row, col) {
+      let boxIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3)
+      this.rows[row][number]--
+      this.columns[col][number]--
+      this.boxes[boxIndex][number]--
+      this.numbers[row][col] = this.notSet
+    },
+    couldPlace: function (number, row, col) {
+      let boxIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3)
+      return this.boxes[boxIndex][number] + this.rows[row][number] + this.columns[col][number] === 0
+    },
+    dfsFindAnswer: function (row, col) {
+      if (this.numbers[row][col] === this.notSet) {
+        for (let num = 1; num < 10; num++) {
+          if (this.couldPlace(num, row, col)) {
+            this.placeNumber(num, row, col)
+            this.placeNextNumber(row, col)
+            if (!this.isSloved) {
+              this.removeNumber(num, row, col)
+            }
+          }
+        }
+      } else this.placeNextNumber(row, col)
+    },
+    check: function (sudo, i, j) {
+      let row = {}
+      let col = {}
+      let subSudo = {}
+      for (let k = 0; k < 9; k++) {
+        let cur1 = sudo[i][k]
+        let cur2 = sudo[k][j]
+        if (cur1) {
+          if (row[cur1]) {
+            return 1
+          } else row[cur1] = cur1
+        }
+        if (cur2) {
+          if (col[cur2]) {
+            return 2
+          } else col[cur2] = cur2
+        }
+        let key = sudo[Math.floor(i / 3) * 3 + Math.floor(k / 3)][Math.floor(j / 3) * 3 + Math.floor(k % 3)]
+        if (subSudo[key]) {
+          return 3
+        } else subSudo[key] = key
+      }
+      return 0
+    },
+    start: function () {
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          if (this.numbers[i][j] !== this.notSet && this.validate(i, j) !== this.right) {
+            return
+          }
+        }
+      }
+      console.log(this.findAnswer())
+      this.fresh = false
+      this.fresh = true
+    },
     getNumber: function (line, col) {
-      if (this.numbers[line][col] === -1) {
+      if (this.numbers[line][col] === this.notSet) {
         return ''
       } else {
         return '' + this.numbers[line][col]
@@ -50,7 +178,7 @@ export default {
       if (this.currentLine === -1 || this.currentCol === -1) {
         return false
       } else {
-        this.numbers[this.currentLine][this.currentCol] = number
+        this.placeNumber(number, this.currentLine, this.currentCol)
         this.fresh = false
         this.fresh = true
         return true
@@ -60,8 +188,14 @@ export default {
   mounted () {
     let vm = this
     vm.numbers = Array(9)
+    vm.rows = Array(9)
+    vm.columns = Array(9)
+    vm.boxes = Array(9)
     for (let i = 0; i < 9; i++) {
-      vm.numbers[i] = Array(9).fill(-1)
+      vm.numbers[i] = Array(9).fill(vm.notSet)
+      vm.rows[i] = Array(10).fill(0)
+      vm.columns[i] = Array(10).fill(0)
+      vm.boxes[i] = Array(10).fill(0)
     }
     document.onkeydown = function (event) {
       let e = event || window.event
