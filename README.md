@@ -2,6 +2,8 @@
 
 > A Vue.js project
 
+[demo](http://sudoku.youggls.top)
+
 ## Build Setup
 
 ``` bash
