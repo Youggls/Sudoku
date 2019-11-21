@@ -3,11 +3,11 @@
   <div v-for="line in lines" :key="line">
     <a-button
       :id="line+''+col"
-      type="primary"
-      style="width:38px;height:38px;"
+      :type="typeArray[line][col]"
+      style="width:42px;height:42px;"
       v-on:click="setCurrent(line, col)"
       v-on:blur="resetCurrent"
-      ghost
+      :ghost="changeIsGhost(line, col)"
       v-show="fresh"
       v-for="col in cols"
       :key="col"
@@ -15,8 +15,6 @@
     {{ getNumber(line, col) }}
     </a-button>
   </div>
-  <div></div>
-  <a-button v-on:click="start"></a-button>
 </div>
 </template>
 <script>
@@ -26,6 +24,7 @@ export default {
     return {
       lines: [0, 1, 2, 3, 4, 5, 6, 7, 8],
       cols: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      typeArray: [[]],
       currentLine: -1,
       currentCol: -1,
       fresh: true,
@@ -38,7 +37,8 @@ export default {
       rows: [[]],
       boxes: [[]],
       columns: [[]],
-      isSloved: false
+      isSloved: false,
+      isGhost: true
     }
   },
   methods: {
@@ -52,6 +52,7 @@ export default {
             if (arr[this.numbers[r][c]] !== 0) {
               arr[this.numbers[r][c]] = 0
             } else {
+              this.changeType(r, c, this.errBlock)
               return this.errBlock
             }
           }
@@ -63,6 +64,7 @@ export default {
           if (arr[this.numbers[r][col]] !== 0) {
             arr[this.numbers[r][col]] = 0
           } else {
+            this.changeType(r, col, this.errLine)
             return this.errLine
           }
         }
@@ -73,10 +75,12 @@ export default {
           if (arr[this.numbers[line][c]] !== 0) {
             arr[this.numbers[line][c]] = 0
           } else {
+            this.changeType(line, c, this.errCol)
             return this.errCol
           }
         }
       }
+      this.changeType(line, col, this.right)
       return this.right
     },
     findAnswer: function () {
@@ -123,31 +127,16 @@ export default {
         }
       } else this.placeNextNumber(row, col)
     },
-    check: function (sudo, i, j) {
-      let row = {}
-      let col = {}
-      let subSudo = {}
-      for (let k = 0; k < 9; k++) {
-        let cur1 = sudo[i][k]
-        let cur2 = sudo[k][j]
-        if (cur1) {
-          if (row[cur1]) {
-            return 1
-          } else row[cur1] = cur1
-        }
-        if (cur2) {
-          if (col[cur2]) {
-            return 2
-          } else col[cur2] = cur2
-        }
-        let key = sudo[Math.floor(i / 3) * 3 + Math.floor(k / 3)][Math.floor(j / 3) * 3 + Math.floor(k % 3)]
-        if (subSudo[key]) {
-          return 3
-        } else subSudo[key] = key
-      }
-      return 0
-    },
     start: function () {
+      let errNum = this.right
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          errNum = this.validate(i, j)
+          if (errNum !== this.right) {
+
+          }
+        }
+      }
       for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
           if (this.numbers[i][j] !== this.notSet && this.validate(i, j) !== this.right) {
@@ -155,7 +144,27 @@ export default {
           }
         }
       }
-      console.log(this.findAnswer())
+      this.findAnswer()
+      this.fresh = false
+      this.fresh = true
+    },
+    reset: function () {
+      let vm = this
+      vm.numbers = Array(9)
+      vm.rows = Array(9)
+      vm.columns = Array(9)
+      vm.boxes = Array(9)
+      vm.typeArray = Array(9)
+      vm.isSloved = false
+      vm.currentLine = -1
+      vm.currentCol = -1
+      for (let i = 0; i < 9; i++) {
+        vm.numbers[i] = Array(9).fill(vm.notSet)
+        vm.rows[i] = Array(10).fill(0)
+        vm.columns[i] = Array(10).fill(0)
+        vm.boxes[i] = Array(10).fill(0)
+        vm.typeArray[i] = Array(9).fill('primary')
+      }
       this.fresh = false
       this.fresh = true
     },
@@ -179,9 +188,22 @@ export default {
         return false
       } else {
         this.placeNumber(number, this.currentLine, this.currentCol)
+        this.validate(this.currentLine, this.currentCol)
         this.fresh = false
         this.fresh = true
         return true
+      }
+    },
+    changeIsGhost: function (row, col) {
+      return this.numbers[row][col] === this.notSet
+    },
+    changeType: function (row, col, type) {
+      if (type === this.right) {
+        this.$emit('disable', false)
+        this.typeArray[row][col] = 'primary'
+      } else {
+        this.$emit('disable', true)
+        this.typeArray[row][col] = 'danger'
       }
     }
   },
@@ -191,18 +213,28 @@ export default {
     vm.rows = Array(9)
     vm.columns = Array(9)
     vm.boxes = Array(9)
+    vm.typeArray = Array(9)
     for (let i = 0; i < 9; i++) {
       vm.numbers[i] = Array(9).fill(vm.notSet)
       vm.rows[i] = Array(10).fill(0)
       vm.columns[i] = Array(10).fill(0)
       vm.boxes[i] = Array(10).fill(0)
+      vm.typeArray[i] = Array(9).fill('primary')
     }
     document.onkeydown = function (event) {
       let e = event || window.event
-      if (e && (e.keyCode >= 49 && e.keyCode <= 57)) {
-        vm.setNumber(e.keyCode - 48)
+      if (e && ((e.keyCode >= 49 && e.keyCode <= 57) || e.keyCode === 8)) {
+        if (e.keyCode !== 8) vm.setNumber(e.keyCode - 48)
+        else vm.setNumber(vm.notSet)
       }
     }
   }
 }
 </script>
+
+<style scoped>
+button {
+  margin-right: 3px;
+  margin-bottom: 3px
+}
+</style>

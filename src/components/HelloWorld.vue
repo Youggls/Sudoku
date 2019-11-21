@@ -1,5 +1,11 @@
 <template>
-<number-block></number-block>
+<a-row>
+  <a-col :span="24">
+    <number-block v-on:disable="setIsDisableStart" ref="number"></number-block>
+    <a-button :disabled="disableStart" v-show="fresh" v-on:click="start">开始求解</a-button>
+    <a-button v-on:click="reset" type="danger">重设数独</a-button>
+  </a-col>
+</a-row>
 </template>
 
 <script>
@@ -11,7 +17,21 @@ export default {
   },
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      disableStart: false,
+      fresh: true
+    }
+  },
+  methods: {
+    start: function () {
+      this.$refs.number.start()
+    },
+    reset: function () {
+      this.$refs.number.reset()
+    },
+    setIsDisableStart: function (value) {
+      this.disableStart = value
+      this.fresh = false
+      this.fresh = true
     }
   }
 }
