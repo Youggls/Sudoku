@@ -64,8 +64,8 @@ export default {
           if (arr[this.numbers[r][col]] !== 0) {
             arr[this.numbers[r][col]] = 0
           } else {
-            this.changeType(r, col, this.errLine)
-            return this.errLine
+            this.changeType(r, col, this.errCol)
+            return this.errCol
           }
         }
       }
@@ -75,8 +75,8 @@ export default {
           if (arr[this.numbers[line][c]] !== 0) {
             arr[this.numbers[line][c]] = 0
           } else {
-            this.changeType(line, c, this.errCol)
-            return this.errCol
+            this.changeType(line, c, this.errLine)
+            return this.errLine
           }
         }
       }
@@ -128,6 +128,7 @@ export default {
       } else this.placeNextNumber(row, col)
     },
     start: function () {
+      this.resetCurrent()
       let errNum = this.right
       for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
@@ -187,8 +188,25 @@ export default {
       if (this.currentLine === -1 || this.currentCol === -1) {
         return false
       } else {
-        this.placeNumber(number, this.currentLine, this.currentCol)
+        if (number === this.notSet) {
+          this.removeNumber(this.numbers[this.currentLine][this.currentCol], this.currentLine, this.currentCol)
+        } else {
+          if (this.numbers[this.currentLine][this.currentCol] !== this.notSet) {
+            this.removeNumber(this.numbers[this.currentLine][this.currentCol], this.currentLine, this.currentCol)
+          }
+          this.placeNumber(number, this.currentLine, this.currentCol)
+        }
         this.validate(this.currentLine, this.currentCol)
+        for (let i = 0; i < 9; i++) {
+          let flag = false
+          for (let j = 0; j < 9; j++) {
+            if (this.validate(i, j) !== this.right) {
+              flag = true
+              break
+            }
+          }
+          if (flag) break
+        }
         this.fresh = false
         this.fresh = true
         return true
@@ -202,6 +220,23 @@ export default {
         this.$emit('disable', false)
         this.typeArray[row][col] = 'primary'
       } else {
+        if (type === this.errLine) {
+          for (let i = 0; i < 9; i++) {
+            this.typeArray[row][i] = 'danger'
+          }
+        } else if (type === this.errCol) {
+          for (let i = 0; i < 9; i++) {
+            this.typeArray[i][col] = 'danger'
+          }
+        } else if (type === this.errBlock) {
+          let i = Math.floor(row / 3)
+          let j = Math.floor(col / 3)
+          for (let r = 3 * i; r < 3 * (i + 1); r++) {
+            for (let c = 3 * j; c < 3 * (j + 1); c++) {
+              this.typeArray[r][c] = 'danger'
+            }
+          }
+        }
         this.$emit('disable', true)
         this.typeArray[row][col] = 'danger'
       }

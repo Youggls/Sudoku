@@ -34,6 +34,7 @@ export default {
       this.disableStart = false
     },
     setIsDisableStart: function (value) {
+      console.log(value)
       this.disableStart = value
       this.fresh = false
       this.fresh = true
