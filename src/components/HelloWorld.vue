@@ -1,10 +1,14 @@
 <template>
 <a-row>
-  <a-col :span="24">
-    <number-block v-on:disable="setIsDisableStart" ref="number"></number-block>
-    <a-button :disabled="disableStart" v-show="fresh" v-on:click="start">开始求解</a-button>
-    <a-button v-on:click="reset" type="danger">重设数独</a-button>
+  <a-col :span="9"></a-col>
+  <a-col :span="6">
+    <a-card :bordered="false" style="border-radius: 15px;">
+      <number-block v-on:disable="setIsDisableStart" ref="number"></number-block>
+    </a-card>
+    <a-button :disabled="disableStart" size="large" style="margin-top: 20px;margin-right: 10px" v-show="fresh" v-on:click="start">开始求解</a-button>
+    <a-button v-on:click="reset" size="large" style="margin-top: 20px;" type="danger">重设数独</a-button>
   </a-col>
+  <a-col :span="9"></a-col>
 </a-row>
 </template>
 
@@ -27,6 +31,7 @@ export default {
     },
     reset: function () {
       this.$refs.number.reset()
+      this.disableStart = false
     },
     setIsDisableStart: function (value) {
       this.disableStart = value
