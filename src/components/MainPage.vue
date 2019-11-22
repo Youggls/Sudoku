@@ -1,21 +1,21 @@
 <template>
 <a-row>
-  <a-col :span="9"></a-col>
-  <a-col :span="6">
+  <a-col :span="8"></a-col>
+  <a-col :span="8">
     <a-card :bordered="false" style="border-radius: 15px;">
       <number-block v-on:disable="setIsDisableStart" ref="number"></number-block>
     </a-card>
     <a-button :disabled="disableStart" size="large" style="margin-top: 20px;margin-right: 10px" v-show="fresh" v-on:click="start">开始求解</a-button>
     <a-button v-on:click="reset" size="large" style="margin-top: 20px;" type="danger">重设数独</a-button>
   </a-col>
-  <a-col :span="9"></a-col>
+  <a-col :span="8"></a-col>
 </a-row>
 </template>
 
 <script>
 import NumberBlock from './NumberBlock'
 export default {
-  name: 'HelloWorld',
+  name: 'MainPage',
   components: {
     NumberBlock
   },
